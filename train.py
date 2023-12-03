@@ -65,11 +65,11 @@ def train(model, train_dataloader, optimizer):
 
     return total_loss
 
-num_epochs = 52
+num_epochs = 50
 
 def predict(model,train_data):
 
-    resultList = random.sample(range(0,3500),100)
+    resultList = random.sample(range(0,3500),100) 
 
     test_data = []
 
@@ -109,6 +109,4 @@ for epoch in range(num_epochs):
 
     print(f"Epoch {epoch+1}: Loss = {total_loss} accu = {predict(model,train_data)}")
 
-    # if epoch % 5 == 1:
-    #     torch.save(model.state_dict(),'outputdr')
 torch.save(model.state_dict(),'outputdr')
