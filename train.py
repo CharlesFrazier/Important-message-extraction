@@ -12,7 +12,8 @@ def preprocess_data(data):
                                         add_special_tokens=True,\
                                         max_length=512,\
                                         return_tensors='pt',\
-                                        pad_to_max_length=True)
+                                        padding='max_length',\
+                                        truncation=True)
 
     return inputs
 
