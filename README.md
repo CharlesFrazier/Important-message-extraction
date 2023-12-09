@@ -11,11 +11,12 @@
 我自然毫不犹豫地选择————“预训练模型”！
 
 ## 模型选取
-本项目使用了 Huggingface🤗 的 Bert 预训练模型 bert-base-cased。
-在训练中，我使用了 bert-base-cased 所提供的 model 和 tokenizer。
+本项目使用了 Huggingface🤗 的 Bert 预训练模型 bert-base-cased。\
+在训练中，我使用了 bert-base-cased 所提供的 model 和 tokenizer。\
+有效性判断：test.py
 
 ## 数据选取与收集
-训练数据我们使用了QQ群群友的聊天记录。
+训练数据我们使用了QQ群群友的聊天记录。\
 - 收集方式：QQ内置聊天记录导出功能。（建议电脑端💻操作，导出为txt格式）
 
 ## 数据处理
