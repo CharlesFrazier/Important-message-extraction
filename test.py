@@ -3,7 +3,7 @@ from transformers import AutoTokenizer
 tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path='/home/charles/code/bert-base-cased')
 device = torch.device('cuda:0')
 from datasets import load_from_disk
-datasets = load_from_disk('/home/charles/code/Huggingface_Toturials/data/glue_sst2')
+datasets = load_from_disk('/home/charles/code/data/glue_sst2')
 def f(data):
     return tokenizer(
         data['sentence'],
