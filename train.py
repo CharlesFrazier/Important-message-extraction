@@ -76,7 +76,7 @@ def train(model, dataloader, optimizer):
 
     return total_loss, total_samples
 
-num_epochs = 50
+num_epochs = 10
 
 def predict(model,tdata):
 
