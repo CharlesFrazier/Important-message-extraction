@@ -1,14 +1,16 @@
 import torch
-import random
+import re
+import numpy as np
 from torch.utils.data import DataLoader
 from transformers import BertTokenizer, BertForSequenceClassification, AdamW
 import json
+from sklearn.metrics import f1_score
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def preprocess_data(data):
 
-    inputs = tokenizer.batch_encode_plus([sample['text'] for sample in data],\
+    inputs = tokenizer.batch_encode_plus([re.sub(r'\[.*?\]|@全体成员', '', sample['text']) for sample in data],\
                                         add_special_tokens=True,\
                                         max_length=512,\
                                         return_tensors='pt',\
@@ -25,6 +27,12 @@ model = BertForSequenceClassification.from_pretrained(\
         num_labels=2)
 
 model.to(device)
+
+f = open('/home/charles/code/my_test.json','r')
+
+content = f.read()
+
+test_data = json.loads(content)
 
 f = open('/home/charles/code/my_json.json','r')
 
@@ -46,68 +54,51 @@ train_dataloader = DataLoader(train_dataset,\
 
 optimizer = AdamW(model.parameters(), lr=1e-5)
 
-def train(model, train_dataloader, optimizer):
-
+def train(model, dataloader, optimizer):
     model.train()
-
     total_loss = 0
+    total_samples = 0
 
-    for batch in train_dataloader:
+    for batch in dataloader:
         optimizer.zero_grad()
-        input_ids = batch[0].to(device)
-        attention_mask = batch[1].to(device)
-        labels = batch[2].to(device)
-        inputs = {'input_ids': input_ids, 'attention_mask': attention_mask, 'labels': labels}
-        outputs = model(**inputs)
-        loss = outputs.loss
+        input_ids, attention_mask, labels = batch 
+        input_ids = input_ids.to(device)
+        attention_mask = attention_mask.to(device)
+        labels = labels.to(device)
+
+        outputs = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
+        loss = outputs[0]
         total_loss += loss.item()
+        total_samples += len(input_ids)
+
         loss.backward()
         optimizer.step()
 
-    return total_loss
+    return total_loss, total_samples
 
 num_epochs = 50
 
-def predict(model,train_data):
+def predict(model,tdata):
 
-    resultList = random.sample(range(0,3500),100) 
-
-    test_data = []
-
-    test_lab = []
-
-    for i in resultList:
-        test_data.append({'text':train_data[i]['text']})
-        test_lab.append(train_data[i]['label'])
-
-    tmp_i,totl = 0,0
+    test_lab = torch.tensor([sample['label'] for sample in tdata])
 
     model.eval()
 
-    inputs = preprocess_data(test_data)
-    input_ids = inputs['input_ids'].to(device)
-    attention_mask = inputs['attention_mask'].to(device)
-    outputs = model(input_ids, attention_mask=attention_mask)
-    logits = outputs.logits
-
+    with torch.no_grad():
+        inputs = preprocess_data(tdata)
+        input_ids = inputs['input_ids'].to(device)
+        attention_mask = inputs['attention_mask'].to(device)
+        outputs = model(input_ids, attention_mask=attention_mask)
+        logits = outputs.logits 
+        
     probs = torch.softmax(logits, dim=1).detach().cpu().numpy()
+    preds = np.argmax(probs, axis=1)
 
-    for itm in probs:
-        x1,x2 = itm[0],itm[1]
-        if x1 > x2:
-            if test_lab[tmp_i]==0:
-                totl = totl+1
-        else:
-            if test_lab[tmp_i]==1:
-                totl = totl+1
-        tmp_i = tmp_i + 1
-
-    return totl
+    return f1_score(test_lab, preds)
 
 for epoch in range(num_epochs):
-
-    total_loss = train(model, train_dataloader, optimizer)
-
-    print(f"Epoch {epoch+1}: Loss = {total_loss} accu = {predict(model,train_data)}")
-
-torch.save(model.state_dict(),'outputdr')
+    total_loss, total_samples = train(model, train_dataloader, optimizer)
+    tloss = (total_loss / total_samples) * 100
+    path = '/home/frazier/code/' + 'outputdr' + str(epoch)
+    print(f"Epoch {epoch+1}: Loss = {tloss}% accu = {predict(model,test_data)}")
+    torch.save(model.state_dict(),path)
