@@ -5,19 +5,15 @@ def process_notifications(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         content = file.read()
     notifications_raw = re.findall(r'(\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2}) (.*?)\n(.*?)\n', content, re.DOTALL)
-
     for timestamp, author, message in notifications_raw:
         notification = {}
-        
         notification['timestamp'] = timestamp.strip()
-        
         notification['author'] = author.strip()
         notification['message'] = message.strip()
         notification['message'] = re.sub(r'[^\w\s@:/?=&.-]+(?![^<>]*>)', ' ',notification['message'])
         notification['message'] = notification['message'].replace('\n',' ')
         notification['message'] = re.sub(r'\s+', ' ', notification['message'])
         notification['message'] = notification['message'].strip()
-
         notifications.append(notification)
     return notifications
 import os
