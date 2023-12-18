@@ -52,7 +52,7 @@ train_dataloader = DataLoader(train_dataset,\
                               batch_size=8,\
                               shuffle=True)
 
-optimizer = AdamW(model.parameters(), lr=1e-5)
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-5)
 
 def train(model, dataloader, optimizer):
     model.train()
